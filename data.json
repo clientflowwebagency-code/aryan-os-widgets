@@ -1,0 +1,21 @@
+{
+  "activity": {
+    "2026-09-03": 243
+  },
+  "cases": {
+    "locked": 0,
+    "total": 49
+  },
+  "generated": "2026-09-03T20:46:22+01:00",
+  "inbox": {
+    "open": 0
+  },
+  "reading": {
+    "noted": 0,
+    "total": 21
+  },
+  "revision": {
+    "due_today": 10,
+    "total": 10
+  }
+}

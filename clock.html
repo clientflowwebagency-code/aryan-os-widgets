@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aryan OS · Clock</title>
+<style>
+  html,body{height:100%;margin:0;background:transparent}
+  .card{position:relative;box-sizing:border-box;min-height:100%;padding:18px 22px 20px;border-radius:12px;overflow:hidden;color:#E8EAF0;
+    font-family:-apple-system,"SF Pro Display","Avenir Next","Helvetica Neue",Helvetica,sans-serif;
+    background:linear-gradient(135deg,#0B0E13 0%,#161B24 100%)}
+  .glow{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(60% 85% at 78% 38%,rgba(124,77,255,.55),transparent 70%),
+               radial-gradient(38% 55% at 14% 92%,rgba(59,91,219,.38),transparent 70%)}
+  .grain{position:absolute;inset:0;opacity:.09;pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+  .label{position:relative;font:500 10px/1 Menlo,"SF Mono",ui-monospace,monospace;letter-spacing:.32em;color:rgba(232,234,240,.55);text-transform:uppercase}
+  .hair{position:relative;width:96px;height:1px;background:rgba(255,255,255,.12);margin:10px 0 14px}
+  .time{position:relative;display:flex;align-items:baseline;gap:8px;font-weight:200;font-size:58px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .time small{font-size:16px;font-weight:300;color:rgba(232,234,240,.5);font-variant-numeric:tabular-nums}
+  .date{position:relative;margin-top:12px;font-size:14px;color:rgba(232,234,240,.82)}
+  .term{position:relative;margin-top:4px;font-size:13px;color:rgba(232,234,240,.55)}
+  .term b{color:#C9B6FF;font-weight:500}
+  @media (max-width:360px){.time{font-size:44px}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="glow"></div><div class="grain"></div>
+  <div class="label">Aryan OS · Clock</div>
+  <div class="hair"></div>
+  <div class="time"><span id="t">--:--</span><small id="s">--</small></div>
+  <div class="date" id="d">&nbsp;</div>
+  <div class="term" id="o">&nbsp;</div>
+</div>
+<script>
+// Oxford full-term dates (Sunday of 1st week → Saturday of 8th week).
+const TERMS=[["Michaelmas","2026-10-11","2026-12-05"],
+             ["Hilary","2027-01-17","2027-03-13"],
+             ["Trinity","2027-04-25","2027-06-19"]];
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const ORD=n=>{const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])};
+function londonNow(){
+  const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',weekday:'long'}).formatToParts(new Date());
+  const g=k=>p.find(x=>x.type===k).value;
+  return {y:+g('year'),m:+g('month'),d:+g('day'),H:g('hour')==='24'?'00':g('hour'),M:g('minute'),S:g('second'),wd:g('weekday')};
+}
+const di=(y,m,d)=>Math.floor(Date.UTC(y,m-1,d)/86400000);
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return di(y,m,d)};
+function termLine(n){
+  const today=di(n.y,n.m,n.d);
+  for(const [name,s,e] of TERMS){
+    const S=parse(s),E=parse(e);
+    if(today>=S-7&&today<S) return `<b>${name} Term</b> · 0th week · ${n.wd}`;
+    if(today>=S&&today<=E){const w=Math.floor((today-S)/7)+1;return `<b>${name} Term</b> · ${ORD(w)} week · ${n.wd}`}
+  }
+  const next=TERMS.map(([name,s])=>[name,parse(s)-today]).filter(x=>x[1]>0).sort((a,b)=>a[1]-b[1])[0];
+  return next?`Vacation · <b>${next[1]} days</b> to ${next[0]}`:'Vacation';
+}
+function tick(){
+  const n=londonNow();
+  document.getElementById('t').textContent=`${n.H}:${n.M}`;
+  document.getElementById('s').textContent=n.S;
+  document.getElementById('d').textContent=`${n.wd} ${n.d} ${MONTHS[n.m-1]} ${n.y}`;
+  document.getElementById('o').innerHTML=termLine(n);
+}
+tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
